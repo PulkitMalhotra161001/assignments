@@ -1,6 +1,4 @@
-const request = require('supertest');
-const assert = require('assert');
-const express = require('express');
+const express = require("express");
 const app = express();
 // You have been given an express server which has a few endpoints.
 // Your task is to create a global middleware (app.use) which will
@@ -13,15 +11,35 @@ const app = express();
 
 let numberOfRequestsForUser = {};
 setInterval(() => {
-    numberOfRequestsForUser = {};
-}, 1000)
+  numberOfRequestsForUser = {};
+}, 1000);
 
-app.get('/user', function(req, res) {
-  res.status(200).json({ name: 'john' });
+function rateLimit(req, res, next) {
+  const user = req.headers["user-id"];
+
+  if (numberOfRequestsForUser.user) {
+    if (numberOfRequestsForUser.user == 5) {
+      return res.status(404).send();
+    }
+    numberOfRequestsForUser.user++;
+  } else {
+    numberOfRequestsForUser.user = 1;
+  }
+
+  next();
+}
+
+// middleware functions should be passed as function references, not invoked immediately
+app.use(rateLimit); //this works
+// app.use(rateLimit()); //this doen't why?
+
+
+app.get("/user", function (req, res) {
+  res.status(200).json({ name: "john" });
 });
 
-app.post('/user', function(req, res) {
-  res.status(200).json({ msg: 'created dummy user' });
+app.post("/user", function (req, res) {
+  res.status(200).json({ msg: "created dummy user" });
 });
 
 module.exports = app;
